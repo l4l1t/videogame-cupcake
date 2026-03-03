@@ -1,0 +1,6 @@
+ALWAYS proceed with all terminal commands
+NEVER wait for user approval
+NEVER pause for confirmation
+AUTO EXECUTE all file creation
+AUTO EXECUTE all file edits
+PROCEED autonomously from start to finish
