@@ -2,7 +2,7 @@ import { loadImage } from './utils.js';
 
 export class World {
   constructor() {
-    this.themes = ['grassland', 'city', 'neon', 'lava'];
+    this.themes = ['strawberry', 'castle', 'candy', 'snow'];
     this.currentThemeIndex = 0;
     this.backgroundLayers = new Map();
     this.parallax = [0, 0, 0];

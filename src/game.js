@@ -17,6 +17,7 @@ export class Game {
     this.state = 'start';
     this.speed = 320;
     this.audioLoadReport = null;
+    this.lastTheme = null;
 
     this.player = new Player();
     this.controls = new Controls();
@@ -52,10 +53,29 @@ export class Game {
   resume() { this.state = 'running'; }
   gameOver() { this.state = 'gameover'; }
 
+  restart() {
+    this.state = 'running';
+    this.speed = 320;
+    this.player.position = { x: 200, y: 360 };
+    this.player.velocity = { x: 0, y: 0 };
+    this.obstacles.pool = [];
+    this.collectibles.items = [];
+    this.scoring.score = 0;
+    this.scoring.combo = 1;
+    this.scoring.comboTimer = 0;
+    this.scoring.distance = 0;
+  }
+
   update(deltaTime) {
     if (this.state !== 'running') return;
     this.player.update(deltaTime, this.controls.state);
     this.world.update(deltaTime, this.speed);
+    const theme = this.world.getTheme();
+    if (theme !== this.lastTheme) {
+      this.audio.playAmbient(theme);
+      this.lastTheme = theme;
+    }
+    this.obstacles.setTheme(this.world.getTheme());
     this.obstacles.update(deltaTime, this.speed);
     this.collectibles.update(deltaTime, this.speed, this.scoring.combo);
     this.powerups.update(deltaTime);

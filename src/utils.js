@@ -45,16 +45,24 @@ export class DeltaTimeManager {
 export const lerp = (start, end, factor) => start + (end - start) * factor;
 
 export function loadImage(path) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const image = new Image();
     image.src = path;
     image.onload = () => resolve(image);
-    image.onerror = reject;
+    image.onerror = () => {
+      console.warn(`Failed to load image: ${path}`);
+      resolve(null);
+    };
   });
 }
 
 export async function loadAudio(path) {
-  const response = await fetch(path);
-  if (!response.ok) throw new Error(`Failed to load audio: ${path}`);
-  return response.arrayBuffer();
+  try {
+    const response = await fetch(path);
+    if (!response.ok) throw new Error(`Failed to load audio: ${path}`);
+    return response.arrayBuffer();
+  } catch {
+    console.warn(`Failed to load audio: ${path}`);
+    return null;
+  }
 }
