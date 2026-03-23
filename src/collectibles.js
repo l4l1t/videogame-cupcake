@@ -9,6 +9,8 @@ export class Collectibles {
     this.animAccumulator = 0;
     this.frame = 0;
     this.frameDuration = 0.08;
+    this.spawnTimer = 0;
+    this.spawnInterval = 1.2;
   }
 
   async load() {
@@ -19,7 +21,14 @@ export class Collectibles {
   }
 
   update(deltaTime, speed, combo) {
+    this.spawnTimer += deltaTime;
+    if (this.spawnTimer >= this.spawnInterval) {
+      this.spawnTimer = 0;
+      this.items.push({ x: 1380, y: 520, width: 32, height: 32, type: 'coin' });
+    }
+
     this.items.forEach((item) => { item.x -= speed * deltaTime; });
+    this.items = this.items.filter((item) => item.x + item.width > -100);
     this.animAccumulator += deltaTime;
     if (this.animAccumulator >= this.frameDuration) {
       this.frame = (this.frame + 1) % 8;
