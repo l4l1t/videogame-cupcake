@@ -12,7 +12,9 @@ export class World {
   async load() {
     const layers = [];
     for (const theme of this.themes) {
-      for (let i = 1; i <= 3; i += 1) layers.push(`assets/backgrounds/${theme}/layer_${i}.png`);
+      for (let i = 1; i <= 3; i++) {
+        layers.push(`assets/backgrounds/${theme}/layer_${i}.png`);
+      }
     }
     const loaded = await Promise.all(layers.map((p) => loadImage(p)));
     layers.forEach((path, index) => this.backgroundLayers.set(path, loaded[index]));
