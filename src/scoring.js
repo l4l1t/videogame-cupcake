@@ -5,7 +5,8 @@ export class ScoringSystem {
     this.combo = 1;
     this.comboTimer = 0;
     this.comboWindow = 2;
-    this.highScore = Number(localStorage.getItem('cupcake-high-score') ?? 0);
+    this.highScore = Number(localStorage.getItem('sweetrun-high-score') ?? 0);
+    this.newHighScore = false;
   }
 
   update(deltaTime, speed) {
@@ -22,9 +23,11 @@ export class ScoringSystem {
   }
 
   save() {
+    this.newHighScore = false;
     if (this.score > this.highScore) {
       this.highScore = this.score;
-      localStorage.setItem('cupcake-high-score', String(this.highScore));
+      localStorage.setItem('sweetrun-high-score', String(this.highScore));
+      this.newHighScore = true;
     }
   }
 }
