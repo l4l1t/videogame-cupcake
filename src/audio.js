@@ -11,6 +11,7 @@ export class AudioSystem {
     this.missingFiles = [];
     this.skippedPreload = false;
     this.ambientSource = null;
+    this.loopSources = new Map();
   }
 
   ensureContext() {
@@ -58,7 +59,7 @@ export class AudioSystem {
       'assets/sounds/ambient/strawberry_loop.mp3',
       'assets/sounds/ambient/castle_loop.mp3',
       'assets/sounds/ambient/candy_loop.mp3',
-      'assets/sounds/ambient/snow_loop.mp3'
+      'assets/sounds/ambient/snow_loop.mp3',
     ];
   }
 
@@ -87,7 +88,7 @@ export class AudioSystem {
       files.map(async (path) => {
         try {
           const arrayBuffer = await loadAudio(path);
-          if (!arrayBuffer) throw new Error('Missing audio buffer');
+          if (!arrayBuffer) { this.missingFiles.push(path); return; }
           const buffer = await this.ctx.decodeAudioData(arrayBuffer);
           this.buffers.set(path, buffer);
         } catch {
@@ -100,41 +101,33 @@ export class AudioSystem {
       loaded: this.buffers.size,
       missing: this.missingFiles.length,
       missingFiles: [...this.missingFiles],
-      skippedPreload: false
+      skippedPreload: false,
     };
   }
 
   play(path, { music = false, playbackRate = 1, pan = 0 } = {}) {
     const buffer = this.buffers.get(path);
     if (!buffer) return;
-
     this.ensureContext();
-
     const source = this.ctx.createBufferSource();
     source.buffer = buffer;
     source.playbackRate.value = playbackRate;
-
     const panner = this.ctx.createStereoPanner();
     panner.pan.value = pan;
-
     source.connect(panner);
     panner.connect(music ? this.musicGain : this.sfxGain);
     source.start();
   }
 
   playAmbient(theme) {
+    const path = `assets/sounds/ambient/${theme}_loop.mp3`;
     if (this.ambientSource) {
-      this.ambientSource.stop();
-      this.ambientSource.disconnect();
+      try { this.ambientSource.stop(); } catch {}
       this.ambientSource = null;
     }
-
-    const path = `assets/sounds/ambient/${theme}_loop.mp3`;
     const buffer = this.buffers.get(path);
     if (!buffer) return;
-
     this.ensureContext();
-
     const source = this.ctx.createBufferSource();
     source.buffer = buffer;
     source.loop = true;
@@ -143,8 +136,29 @@ export class AudioSystem {
     this.ambientSource = source;
   }
 
+  playLoop(path) {
+    if (this.loopSources.get(path)) return;
+    const buffer = this.buffers.get(path);
+    if (!buffer) return;
+    this.ensureContext();
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.connect(this.sfxGain);
+    source.start();
+    this.loopSources.set(path, source);
+  }
+
+  stopLoop(path) {
+    const source = this.loopSources.get(path);
+    if (!source) return;
+    try { source.stop(); } catch {}
+    this.loopSources.delete(path);
+  }
+
   playCoinCombo(combo) {
     this.comboPlaybackRate = Math.min(2, 1 + combo * 0.05);
     this.play('assets/sounds/collectibles/coin_combo.mp3', { playbackRate: this.comboPlaybackRate });
   }
 }
+
