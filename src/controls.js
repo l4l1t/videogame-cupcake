@@ -4,6 +4,7 @@ export class Controls {
     this.lastTapTime = 0;
     this.touchStart = null;
     this.onTap = null;
+    this.onPause = null;
     this.setupKeyboard();
     this.setupTouch();
     this.setupGamepad();
@@ -15,22 +16,26 @@ export class Controls {
 
   setupKeyboard() {
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') { this.state.jumpPressed = true; this.vibrate(15); this.onTap?.(); }
+      if (e.code === 'Space') {
+        this.state.jumpPressed = true;
+        this.vibrate(15);
+        this.onTap?.();
+      }
       if (e.code === 'ArrowDown') this.state.slide = true;
       if (e.code === 'ShiftLeft') this.state.dash = true;
+      if (e.code === 'KeyP' || e.code === 'Escape') this.onPause?.();
     });
-    window.addEventListener('keyup', () => {
-      this.state.jumpPressed = false;
-      this.state.slide = false;
-      this.state.dash = false;
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') this.state.jumpPressed = false;
+      if (e.code === 'ArrowDown') this.state.slide = false;
+      if (e.code === 'ShiftLeft') this.state.dash = false;
     });
   }
 
   setupTouch() {
     window.addEventListener('touchstart', (e) => {
       const now = performance.now();
-      const isDoubleTap = now - this.lastTapTime < 280;
-      if (isDoubleTap) {
+      if (now - this.lastTapTime < 280) {
         this.state.jumpPressed = true;
       } else {
         this.onTap?.();
@@ -51,11 +56,22 @@ export class Controls {
 
     window.addEventListener('touchend', () => {
       this.state.charge = false;
+      this.state.jumpPressed = false;
       this.touchStart = null;
     });
   }
 
   setupGamepad() {
     window.addEventListener('gamepadconnected', () => this.vibrate(20));
+  }
+
+  pollGamepad() {
+    const gamepads = navigator.getGamepads?.();
+    if (!gamepads) return;
+    const gp = gamepads[0];
+    if (!gp) return;
+    this.state.jumpPressed = gp.buttons[0]?.pressed ?? false;
+    this.state.slide = gp.buttons[1]?.pressed ?? false;
+    this.state.dash = gp.buttons[2]?.pressed ?? false;
   }
 }
