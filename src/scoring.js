@@ -6,6 +6,7 @@ export class ScoringSystem {
     this.comboTimer = 0;
     this.comboWindow = 2;
     this.highScore = Number(localStorage.getItem('cupcake-high-score') ?? 0);
+    this.newHighScore = false;
   }
 
   update(deltaTime, speed) {
@@ -25,6 +26,9 @@ export class ScoringSystem {
     if (this.score > this.highScore) {
       this.highScore = this.score;
       localStorage.setItem('cupcake-high-score', String(this.highScore));
+      this.newHighScore = true;
+    } else {
+      this.newHighScore = false;
     }
   }
 }

@@ -13,4 +13,6 @@ export class Camera {
     this.x = lerp(this.x, targetX, Math.min(1, this.smoothing * deltaTime));
     this.y = lerp(this.y, player.position.y, Math.min(1, this.smoothing * deltaTime));
   }
+
+  reset() { this.x = 0; this.y = 0; }
 }

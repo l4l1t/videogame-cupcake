@@ -11,6 +11,24 @@ export class Particles {
     this.textures = await Promise.all(paths.map(loadImage));
   }
 
+  spawn(type, x, y) {
+    const count = type === 'death' ? 12 : type === 'coin' ? 4 : 6;
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count;
+      const speed = 80 + Math.random() * 120;
+      this.pool.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 60,
+        lifetime: 0.4 + Math.random() * 0.3,
+        maxLifetime: 0.7,
+        type,
+        size: type === 'death' ? 10 : 6,
+        color: type === 'coin' ? '#ffd700' : type === 'death' ? '#ff4444' : '#ffffff'
+      });
+    }
+  }
+
   update(deltaTime) {
     this.pool.forEach((p) => {
       p.lifetime -= deltaTime;

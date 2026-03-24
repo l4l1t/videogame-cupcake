@@ -10,6 +10,8 @@ export class AudioSystem {
     this.comboPlaybackRate = 1;
     this.missingFiles = [];
     this.skippedPreload = false;
+    this.loopSources = new Map();
+    this.ambientSource = null;
   }
 
   ensureContext() {
@@ -24,15 +26,13 @@ export class AudioSystem {
 
   getManifest() {
     return [
-      'assets/sounds/movement/jump.mp3', 'assets/sounds/movement/dash.mp3', 'assets/sounds/movement/slide.mp3', 'assets/sounds/movement/land.mp3',
-      'assets/sounds/collectibles/coin.mp3', 'assets/sounds/collectibles/coin_combo.mp3', 'assets/sounds/collectibles/pickup.mp3', 'assets/sounds/collectibles/chime.mp3',
-      'assets/sounds/powerups/invincible.mp3', 'assets/sounds/powerups/magnet.mp3', 'assets/sounds/powerups/speed.mp3', 'assets/sounds/powerups/expire.mp3',
-      'assets/sounds/damage/hit.mp3', 'assets/sounds/damage/fall.mp3', 'assets/sounds/damage/fail.mp3', 'assets/sounds/damage/warn.mp3',
-      'assets/sounds/tutorial/prompt1.mp3', 'assets/sounds/tutorial/prompt2.mp3', 'assets/sounds/tutorial/prompt3.mp3', 'assets/sounds/tutorial/prompt4.mp3',
-      'assets/sounds/celebration/win.mp3', 'assets/sounds/celebration/streak.mp3', 'assets/sounds/celebration/unlock.mp3', 'assets/sounds/celebration/applause.mp3',
-      'assets/sounds/ui/click.mp3', 'assets/sounds/ui/pause.mp3', 'assets/sounds/ui/resume.mp3', 'assets/sounds/ui/gameover.mp3',
-      'assets/sounds/ambient/grassland.mp3', 'assets/sounds/ambient/city.mp3', 'assets/sounds/ambient/neon.mp3', 'assets/sounds/ambient/lava.mp3',
-      'assets/sounds/ambient/wind.mp3', 'assets/sounds/ambient/riser.mp3'
+      'assets/sounds/movement/jump.mp3', 'assets/sounds/movement/dash.mp3', 'assets/sounds/movement/slide.mp3', 'assets/sounds/movement/land_soft.mp3',
+      'assets/sounds/movement/double_jump.mp3', 'assets/sounds/movement/footsteps_loop.mp3',
+      'assets/sounds/collectibles/coin.mp3', 'assets/sounds/collectibles/coin_combo.mp3',
+      'assets/sounds/powerups/invincibility.mp3', 'assets/sounds/powerups/coin_magnet.mp3', 'assets/sounds/powerups/speed_boost.mp3',
+      'assets/sounds/damage/hurt.mp3', 'assets/sounds/damage/death.mp3',
+      'assets/sounds/ui/pause.mp3', 'assets/sounds/ui/resume.mp3', 'assets/sounds/ui/game_over.mp3', 'assets/sounds/ui/high_score.mp3',
+      'assets/sounds/ambient/strawberry_loop.mp3', 'assets/sounds/ambient/castle_loop.mp3', 'assets/sounds/ambient/candy_loop.mp3', 'assets/sounds/ambient/snow_loop.mp3'
     ];
   }
 
@@ -57,17 +57,15 @@ export class AudioSystem {
 
     this.ensureContext();
 
-    await Promise.all(
-      files.map(async (path) => {
-        try {
-          const arrayBuffer = await loadAudio(path);
-          const buffer = await this.ctx.decodeAudioData(arrayBuffer);
-          this.buffers.set(path, buffer);
-        } catch {
-          this.missingFiles.push(path);
-        }
-      })
-    );
+    await Promise.all(files.map(async (path) => {
+      try {
+        const arrayBuffer = await loadAudio(path);
+        const buffer = await this.ctx.decodeAudioData(arrayBuffer);
+        this.buffers.set(path, buffer);
+      } catch {
+        this.missingFiles.push(path);
+      }
+    }));
 
     return {
       loaded: this.buffers.size,
@@ -93,6 +91,27 @@ export class AudioSystem {
     source.connect(panner);
     panner.connect(music ? this.musicGain : this.sfxGain);
     source.start();
+  }
+
+  playLoop(path) {
+    if (this.loopSources?.get(path)) return;
+    const buffer = this.buffers.get(path);
+    if (!buffer) return;
+    this.ensureContext();
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.connect(this.sfxGain);
+    source.start();
+    if (!this.loopSources) this.loopSources = new Map();
+    this.loopSources.set(path, source);
+  }
+
+  stopLoop(path) {
+    const source = this.loopSources?.get(path);
+    if (!source) return;
+    try { source.stop(); } catch {}
+    this.loopSources.delete(path);
   }
 
   playCoinCombo(combo) {

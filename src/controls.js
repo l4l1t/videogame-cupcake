@@ -3,6 +3,8 @@ export class Controls {
     this.state = { jumpPressed: false, slide: false, dash: false, charge: false };
     this.lastTapTime = 0;
     this.touchStart = null;
+    this.onPause = null;
+    this.onTap = null;
     this.setupKeyboard();
     this.setupTouch();
     this.setupGamepad();
@@ -14,9 +16,10 @@ export class Controls {
 
   setupKeyboard() {
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') { this.state.jumpPressed = true; this.vibrate(15); }
+      if (e.code === 'Space') { this.state.jumpPressed = true; this.vibrate(15); this.onTap?.(); }
       if (e.code === 'ArrowDown') this.state.slide = true;
       if (e.code === 'ShiftLeft') this.state.dash = true;
+      if (e.code === 'KeyP' || e.code === 'Escape') this.onPause?.();
     });
     window.addEventListener('keyup', () => {
       this.state.jumpPressed = false;
@@ -32,6 +35,7 @@ export class Controls {
       this.lastTapTime = now;
       this.touchStart = e.touches[0];
       this.state.charge = true;
+      this.onTap?.();
     });
 
     window.addEventListener('touchmove', (e) => {
@@ -46,6 +50,9 @@ export class Controls {
     window.addEventListener('touchend', () => {
       this.state.charge = false;
       this.touchStart = null;
+      this.state.jumpPressed = false;
+      this.state.slide = false;
+      this.state.dash = false;
     });
   }
 
