@@ -14,7 +14,6 @@ export class DeltaTimeManager {
       this.lastTimestamp = currentTimestamp;
       return this.deltaTime;
     }
-
     this.deltaTime = Math.min((currentTimestamp - this.lastTimestamp) / 1000, this.maxDelta);
     this.lastTimestamp = currentTimestamp;
     this.physicsAccumulator += this.deltaTime;
@@ -50,7 +49,7 @@ export function loadImage(path) {
     image.src = path;
     image.onload = () => resolve(image);
     image.onerror = () => {
-      console.warn(`Failed to load image: ${path}`);
+      console.warn('[Sweet Run] Missing image:', path);
       resolve(null);
     };
   });
@@ -59,10 +58,10 @@ export function loadImage(path) {
 export async function loadAudio(path) {
   try {
     const response = await fetch(path);
-    if (!response.ok) throw new Error(`Failed to load audio: ${path}`);
+    if (!response.ok) throw new Error(String(response.status));
     return response.arrayBuffer();
-  } catch {
-    console.warn(`Failed to load audio: ${path}`);
+  } catch (err) {
+    console.warn('[Sweet Run] Missing audio:', path, err.message);
     return null;
   }
 }
